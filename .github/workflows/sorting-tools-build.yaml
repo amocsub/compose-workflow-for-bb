@@ -1,8 +1,9 @@
 name: Sorting Tools Build
 on:
-  push:
-    paths:
-      - 'sorting-tools.Dockerfile'
+  workflow_dispatch:
+  # push:
+  #   paths:
+  #     - 'sorting-tools.Dockerfile'
 
 jobs:
   build:

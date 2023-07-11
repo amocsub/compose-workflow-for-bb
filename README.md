@@ -35,3 +35,9 @@ On another hand if you want to run the whole workflow as described in the image 
 docker compose up --remove-orphans
 ```
 This would run the whole workflow and cleanup the resultant containers when they are done. Please also consider filling up in this case the **subfinder-input** file with the domains you want to scan
+
+## ToDo
+- Add filter to only pass to next steps assets that were part from the initial.
+- Add news from dnsx and nuclei.
+- Add support to import data to a DB.
+- Feature scans in different folders to emulate different programs so it would be easy to manage scopes.

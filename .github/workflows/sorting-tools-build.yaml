@@ -1,0 +1,22 @@
+name: Sorting Tools Build
+on:
+  push:
+    paths:
+      - 'sorting-tools.Dockerfile'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Authenticate with DockerHub
+        run: docker login -u ${{ secrets.DOCKERHUB_USER }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Build Docker image
+        run: docker build -t buscoma/sorting-tools -f sorting-tools.Dockerfile .
+
+      - name: Push Docker image
+        run: docker push -t buscoma/sorting-tools -f sorting-tools.Dockerfile .

@@ -1,0 +1,115 @@
+version: '3'
+
+services:
+  subfinder:
+    image: projectdiscovery/subfinder
+    # platform: linux/arm64
+    volumes:
+      - ./config/subfinder:/root/.config/subfinder
+      - ./workdir:/tmp/workdir
+
+  prepare-dnsx:
+    image: buscoma/sorting-tools
+    # platform: linux/arm64
+    depends_on:
+      subfinder:
+        condition: service_completed_successfully   
+    volumes:
+      - ./workdir:/tmp/workdir
+    command:
+      - /bin/bash
+      - -c
+      - |
+        cat /tmp/workdir/output/subfinder-output.tmp | anew /tmp/workdir/output/subfinder-output > /tmp/workdir/news/subfinder-news
+        rm /tmp/workdir/output/subfinder-output.tmp
+        cat /tmp/workdir/output/subfinder-output | jq -r 'try .host' > /tmp/workdir/input/dnsx-input
+
+  dnsx:
+    image: projectdiscovery/dnsx
+    # platform: linux/arm64
+    depends_on:
+      prepare-dnsx:
+        condition: service_completed_successfully
+    volumes:
+      - ./config/dnsx:/root/.config/dnsx
+      - ./workdir:/tmp/workdir
+
+  prepare-naabu:
+    image: buscoma/sorting-tools
+    # platform: linux/arm64
+    depends_on:
+      dnsx:
+        condition: service_completed_successfully
+    volumes:
+      - ./workdir:/tmp/workdir
+    command:
+      - /bin/bash
+      - -c
+      - |
+        cat /tmp/workdir/output/dnsx-output.tmp | anew /tmp/workdir/output/dnsx-output > /tmp/workdir/news/dnsx-news
+        rm /tmp/workdir/output/dnsx-output.tmp
+        cat /tmp/workdir/output/dnsx-output | jq -r 'try .host, try .a[]' > /tmp/workdir/input/naabu-input
+
+  naabu:
+    image: projectdiscovery/naabu
+    # platform: linux/arm64
+    depends_on:
+      prepare-naabu:
+        condition: service_completed_successfully
+    volumes:
+      - ./config/naabu:/root/.config/naabu
+      - ./workdir:/tmp/workdir
+
+  prepare-httpx:
+    image: buscoma/sorting-tools
+    # platform: linux/arm64
+    depends_on:
+      naabu:
+        condition: service_completed_successfully
+    volumes:
+      - ./workdir:/tmp/workdir
+    command:
+      - /bin/bash
+      - -c
+      - |
+        cat /tmp/workdir/output/naabu-output.tmp | anew /tmp/workdir/output/naabu-output > /tmp/workdir/news/naabu-news
+        rm /tmp/workdir/output/naabu-output.tmp
+        cat /tmp/workdir/output/naabu-output | jq -r 'if .host then .host + ":" + (.port.Port | tostring) else empty end' | sort -u > /tmp/workdir/input/httpx-input
+
+  httpx:
+    image: projectdiscovery/httpx
+    # platform: linux/arm64
+    depends_on:
+      prepare-httpx:
+        condition: service_completed_successfully
+    volumes:
+      - ./config/httpx:/root/.config/httpx
+      - ./workdir:/tmp/workdir
+
+  prepare-nuclei:
+    image: buscoma/sorting-tools
+    # platform: linux/arm64
+    depends_on:
+      httpx:
+        condition: service_completed_successfully
+    volumes:
+      - ./workdir:/tmp/workdir
+    command:
+      - /bin/bash
+      - -c
+      - |
+        cat /tmp/workdir/output/httpx-output.tmp > /tmp/workdir/output/httpx-output
+        rm /tmp/workdir/output/httpx-output.tmp
+        cat /tmp/workdir/output/httpx-output | jq -r -s 'map({(.url):1})|add|keys_unsorted | .[]' > /tmp/workdir/input/nuclei-input
+
+  nuclei:
+    image: projectdiscovery/nuclei
+    # platform: linux/arm64
+    depends_on:
+      prepare-nuclei:
+        condition: service_completed_successfully
+    volumes:
+      - ./config/nuclei:/root/.config/nuclei
+      - ./config/nuclei-templates:/root/nuclei-templates
+      - ./config/custom-nuclei-templates:/root/nuclei-templates/custom-nuclei-templates
+      - ./workdir:/tmp/workdir

@@ -20,4 +20,4 @@ jobs:
         run: docker build -t buscoma/sorting-tools -f sorting-tools.Dockerfile .
 
       - name: Push Docker image
-        run: docker push -t buscoma/sorting-tools -f sorting-tools.Dockerfile .
+        run: docker push buscoma/sorting-tools

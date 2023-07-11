@@ -80,7 +80,7 @@ resume: false
 #exclude-matchers: []
 
 # templates to run based on severity. possible values: info, low, medium, high, critical, unknown
-severity: low, medium, high, critical
+severity: high, critical
 
 # templates to exclude based on severity. possible values: info, low, medium, high, critical, unknown
 #exclude-severity: 
@@ -233,7 +233,7 @@ resolvers: /tmp/workdir/resolvers
 #interactions-cooldown-period: 5
 
 # disable interactsh server for oast testing, exclude oast based templates
-#no-interactsh: false
+no-interactsh: true
 
 # overrides fuzzing type set in template (replace, prefix, postfix, infix)
 #fuzzing-type: 

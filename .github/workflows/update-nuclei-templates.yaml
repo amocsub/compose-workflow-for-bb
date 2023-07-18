@@ -1,8 +1,7 @@
 name: Update Nuclei Templates
 on:
   workflow_dispatch:
-  schedule:
-  - cron: "*/2 * * * *"
+  schedule: [{"cron": "*/5 * * * *"}]
 
 jobs:
   update-nuclei-templates:
